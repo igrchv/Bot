@@ -12,8 +12,6 @@ from settings import TG_TOKEN
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import ConversationHandler
 from telegram import ReplyKeyboardRemove
-from telegram import ParseMode
-import sqlite3
 
 
 # функция parrot отвечает тем же сообщением, которое ему прислали (П:Привет! Б:Привет!)
@@ -42,14 +40,13 @@ def mentor_anketa_sfera(bot, update):
     print('\nСфера:')
     print(bot.message.text)
     update.user_data['Сфера'] = bot.message.text #временно сохраняем ответ
-    bot.message.reply_text("Готово! \nПросматривайте анкеты и выбирайте достоных кандидатов.", reply_markup=ReplyKeyboardRemove())
+    bot.message.reply_text("Готово! \nПросматривайте анкеты и выбирайте достоных кандидатов.")
     return ConversationHandler.END #выходим из диалога
 #____________________________________________________________________________________________________________
 # Анкета Менти
 def mentee_anketa_start(bot, update):
     print('\nХочешь найти ментора или стать ментором?')
     print(bot.message.text)
-    update.user_data['username'] = bot.message.chat.username
     bot.message.reply_text('Отлично! \nТеперь тебе надо заполнить анкету.')
     keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
                                            ['Профессиональное развитие']])
@@ -73,22 +70,20 @@ def mentee_anketa_position(bot, update):
 
 def mentee_anketa_motivation(bot, update):
     update.user_data['Мотивация'] = bot.message.text
-    text = '''<b>{Имя}</b>
-<b>\nСфера:</b> {Сфера}
-<b>Должность:</b> {Должность}
-<b>Мотивация:</b> {Мотивация}
-    '''.format(**update.user_data) #** в форматировании подставляют значения
-    bot.message.reply_text(text, parse_mode=ParseMode.HTML)
+    text = """Имя:{Имя}
+    Сфера: {Сфера}
+    Должность: {Должность}
+    Мотивация: {Мотивация}""".format(**update.user_data) #** в форматировании подставляют значения
+    bot.message.reply_text(text)
     keyboard_MenteeCheck = ReplyKeyboardMarkup([['Все верно'],['Пройти заново']])
     bot.message.reply_text('Проверь анкету на корректность информации.', reply_markup=keyboard_MenteeCheck)
     return "Конец анкеты"
 
 def mentee_anketa_end(bot, update):
-    text ="""username: {username}
-    Имя: {Имя}
-    Сфера: {Сфера}
-    Должность: {Должность}
-    Мотивация: {Мотивация}""".format(**update.user_data)
+    text = """Имя: {Имя}
+Сфера: {Сфера}
+Должность: {Должность}
+Мотивация: {Мотивация}""".format(**update.user_data)
     print('\n',text)
     bot.message.reply_text('Готово, теперь менторы смогут увидеть твою анкету.'
                            '\nЕсли хочешь оставить анкету в другой сфере, напиши /start', reply_markup=ReplyKeyboardRemove())
