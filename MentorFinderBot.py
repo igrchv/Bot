@@ -19,6 +19,19 @@ import sqlite3
 # функция parrot отвечает тем же сообщением, которое ему прислали (П:Привет! Б:Привет!)
 # функция sms вызывается пользователем при отправке команды, к которой эта функция привязана
 
+# База данных
+conn = sqlite3.connect('db/database_mentee.db', check_same_thread=False)
+cursor = conn.cursor()
+
+def db_enter(user_id: int, user_name:str, user_sphere:str, user_job:str, user_motivation:str,  username:str):
+    cursor.execute('INSERT INTO mentee (user_id, user_name, user_sphere, user_job, user_motivation, username) VALUES (?,?,?,?,?,?)',
+                   (user_id, user_name, user_sphere, user_job, user_motivation, username))
+    conn.commit()
+
+#user_name:str, user_sphere:str, user_job:str, user_motivation:str,
+# user_name, user_sphere, user_job, user_motivation,
+# ,?,?,?
+
 # Начало работы, вопрос кем хочет быть в виде кнопок
 def sms_start(bot, update):
     print('\n\nНачало')
@@ -42,8 +55,35 @@ def mentor_anketa_sfera(bot, update):
     print('\nСфера:')
     print(bot.message.text)
     update.user_data['Сфера'] = bot.message.text #временно сохраняем ответ
-    bot.message.reply_text("Готово! \nПросматривайте анкеты и выбирайте достоных кандидатов.", reply_markup=ReplyKeyboardRemove())
-    return ConversationHandler.END #выходим из диалога
+    keyboard_mentor_nachalo = ReplyKeyboardMarkup([['Показать анкету']], resize_keyboard=True)
+    bot.message.reply_text('Готово! \nПросматривайте анкеты и выбирайте достоных кандидатов.', reply_markup=keyboard_mentor_nachalo)
+    return "Показ анкеты" #выходим из диалога
+
+def mentor_show_anketa(bot, update):
+    # sfera="""{сфера}""".format(**update.user_data)
+    cursor.execute('SELECT * from mentee WHERE user_sphere="Карьерный рост"') #WHERE user_sphere="""{Сфера}""".format(update.user_data')
+    records =cursor.fetchall()
+    for row in records:
+        update.user_data['name']=row[1]
+        update.user_data['sfera'] = row[2]
+        update.user_data['job'] = row[3]
+        update.user_data['motivation'] = row[4]
+        update.user_data['username'] = row[5]
+    text="""{name}
+@{username}\n
+Сфера: {sfera}
+Должность: {job}
+Мотивация: {motivation}""".format(**update.user_data)
+    keyboard_mentor_vibor = ReplyKeyboardMarkup([['Показать новую анкету'], ['Сменить сферу'],
+                                                  ['Кандидат подходит']])
+    bot.message.reply_text(text, reply_markup=keyboard_mentor_vibor)
+    return "Выбор"
+
+def mentor_end(bot,update):
+    bot.message.reply_text('Кто-то только что нашел себе ментора!\nВам остается только связаться с хозяином анкеты, нажав на его юзернейм.\n*анкета удаляется из бд*',
+                           reply_markup=ReplyKeyboardRemove())
+    return ConversationHandler.END
+
 #____________________________________________________________________________________________________________
 # Анкета Менти
 def mentee_anketa_start(bot, update):
@@ -93,7 +133,56 @@ def mentee_anketa_end(bot, update):
     bot.message.reply_text('Готово, теперь менторы смогут увидеть твою анкету.'
                            '\nЕсли хочешь оставить анкету в другой сфере, напиши /start', reply_markup=ReplyKeyboardRemove())
 
+    us_id=bot.message.chat.id
+    us_name="""{Имя}""".format(**update.user_data)
+    us_sphere="""{Сфера}""".format(**update.user_data)
+    us_job="""{Должность}""".format(**update.user_data)
+    us_motivation="""{Мотивация}""".format(**update.user_data)
+    username=bot.message.chat.username
+
+    db_enter(user_id=us_id, user_name=us_name, user_sphere=us_sphere, user_job=us_job, user_motivation=us_motivation, username=username)
+    conn.commit()
     return ConversationHandler.END
+
+# user_name=us_name, user_job=us_job, useяr_motivation=us_motivation,
+
+# Создаем main, которая соединяется с Telegram. Main-тело программы, содержит в себе описание действий
+def main():
+    my_bot = Updater(TG_TOKEN)
+
+    my_bot.dispatcher.add_handler(CommandHandler('start', sms_start))
+
+# Анкета "Стать ментором"
+    my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Стать ментором'), mentor_anketa_start)],
+                                                      states={
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentor_anketa_sfera)],
+                                                          "Показ анкеты": [MessageHandler(Filters.regex('Показать анкету'), mentor_show_anketa)],
+                                                          "Выбор": [MessageHandler(Filters.regex('Показать новую анкету'), mentor_show_anketa),
+                                                                    MessageHandler(Filters.regex('Сменить сферу'), mentor_anketa_start),
+                                                                    MessageHandler(Filters.regex('Кандидат подходит'), mentor_end)]
+                                                      },
+                                                      fallbacks=[]
+                                                      )
+                                  )
+# Анкета "Найти ментора"
+    my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Найти ментора'), mentee_anketa_start)],
+                                                      states={
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
+                                                          "Имя": [MessageHandler(Filters.text, mentee_anketa_name)],
+                                                          "Должность": [MessageHandler(Filters.text, mentee_anketa_position)],
+                                                          "Мотивация": [MessageHandler(Filters.text, mentee_anketa_motivation)],
+                                                          "Конец анкеты": [MessageHandler(Filters.regex('Все верно'), mentee_anketa_end),
+                                                                           MessageHandler(Filters.regex('Пройти заново'), mentee_anketa_start)]
+                                                      },
+                                                      fallbacks=[]
+                                                      )
+                                  )
+
+    my_bot.start_polling()
+    my_bot.idle()
+
+main()
+
 
 # Выбор сферы в случае, если "Стать ментором"
 #def mentor_sfera(bot, update):
@@ -128,33 +217,6 @@ def mentee_anketa_end(bot, update):
 #    print(bot.message.text)
 
 
-# Создаем main, которая соединяется с Telegram. Main-тело программы, содержит в себе описание действий
-def main():
-    my_bot = Updater(TG_TOKEN)
-
-    my_bot.dispatcher.add_handler(CommandHandler('start', sms_start))
-
-# Анкета "Стать ментором"
-    my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Стать ментором'), mentor_anketa_start)],
-                                                      states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentor_anketa_sfera)]
-                                                      },
-                                                      fallbacks=[]
-                                                      )
-                                  )
-# Анкета "Найти ментора"
-    my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Найти ментора'), mentee_anketa_start)],
-                                                      states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
-                                                          "Имя": [MessageHandler(Filters.text, mentee_anketa_name)],
-                                                          "Должность": [MessageHandler(Filters.text, mentee_anketa_position)],
-                                                          "Мотивация": [MessageHandler(Filters.text, mentee_anketa_motivation)],
-                                                          "Конец анкеты": [MessageHandler(Filters.regex('Все верно'), mentee_anketa_end),
-                                                                           MessageHandler(Filters.regex('Пройти заново'), mentee_anketa_start)]
-                                                      },
-                                                      fallbacks=[]
-                                                      )
-                                  )
 
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Найти ментора'), anketa_sfera))
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Стать ментором'), mentor_sfera))
@@ -164,9 +226,5 @@ def main():
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Профессиональное развитие'), anketa_name))
 
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.text, anketa_position))
+
 #    if Filters.text = True
-
-    my_bot.start_polling()
-    my_bot.idle()
-
-main()
