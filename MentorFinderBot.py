@@ -42,6 +42,8 @@ def sms_start(bot, update):
 
 #________________________________________________________________________________________________________________________________________________________________________
 # Анкета ментора
+# можнр вывести анкету с id#1 отдельной функцией, присвоив аргумент. Последующие анкеты будут показаны с помощью отдельной функции, где id=id+1
+# или сделать 3 таблицы?
 def mentor_anketa_start(bot, update):
     print('\nХочешь найти ментора или стать ментором?')
     print(bot.message.text)
@@ -54,28 +56,115 @@ def mentor_anketa_start(bot, update):
 def mentor_anketa_sfera(bot, update):
     print('\nСфера:')
     print(bot.message.text)
-    update.user_data['Сфера'] = bot.message.text #временно сохраняем ответ
+    update.user_data['sphere'] = bot.message.text #временно сохраняем ответ
     keyboard_mentor_nachalo = ReplyKeyboardMarkup([['Показать анкету']], resize_keyboard=True)
     bot.message.reply_text('Готово! \nПросматривайте анкеты и выбирайте достоных кандидатов.', reply_markup=keyboard_mentor_nachalo)
+    # i=0
+    # update.user_data['i']=i
     return "Показ анкеты" #выходим из диалога
 
-def mentor_show_anketa(bot, update):
-    # sfera="""{сфера}""".format(**update.user_data)
-    cursor.execute('SELECT * from mentee WHERE user_sphere="Карьерный рост"') #WHERE user_sphere="""{Сфера}""".format(update.user_data')
-    records =cursor.fetchall()
-    for row in records:
-        update.user_data['name']=row[1]
-        update.user_data['sfera'] = row[2]
-        update.user_data['job'] = row[3]
-        update.user_data['motivation'] = row[4]
-        update.user_data['username'] = row[5]
-    text="""{name}
+# def mentor_next(bot, update):
+#     # last_user='{last_user}'.format(update.user_data)
+#     # last_user=last_user+1
+#     # update.user_data['last_user'] = last_user
+#     sfera = """{sphere}""".format(**update.user_data)
+#     cursor.execute("""SELECT *
+#         FROM mentee
+#         WHERE user_sphere=?
+#         ORDER BY id
+#         LIMIT 1""", (sfera,))  # WHERE user_sphere="""{Сфера}""".format(update.user_data')
+#     record = cursor.fetchone()
+#     for row in record:
+#         update.user_data['name'] = record[1]
+#         update.user_data['sfera'] = record[2]
+#         update.user_data['job'] = record[3]
+#         update.user_data['motivation'] = record[4]
+#         update.user_data['username'] = record[5]
+#         id=record[6]
+#         update.user_data['id'] = id
+#     text = """{name}
+# @{username}\n
+# Сфера: {sfera}
+# Должность: {job}
+# Мотивация: {motivation}""".format(**update.user_data)
+#     cursor.execute("""SELECT id FROM mentee ORDER BY id DESC """)
+#     row=cursor.fetchone()
+#     rowitem=row[0]
+#     max_id=rowitem
+#     print(max_id)
+#     max_id1=max_id+1
+#     print(max_id1)
+#     cursor.execute("""UPDATE mentee SET id=? WHERE id=(SELECT id FROM  mentee ORDER BY id ASC )""", (max_id1,))
+#     conn.commit()
+#     keyboard_mentor_vibor = ReplyKeyboardMarkup([['Показать новую анкету'], ['Сменить сферу'],
+#                                                  ['Кандидат подходит']])
+#     bot.message.reply_text(text, reply_markup=keyboard_mentor_vibor)
+
+
+# def mentor_show_anketa(bot, update):
+#     # last_user="""{i}""".format(update.user_data)
+#     # print(last_user)
+#     sfera="""{sphere}""".format(**update.user_data)
+#     cursor.execute("""SELECT *
+#     FROM mentee
+#     WHERE user_sphere=?
+#     ORDER BY RANDOM()
+#     LIMIT 1""", (sfera, )) #WHERE user_sphere="""{Сфера}""".format(update.user_data')
+#     record =cursor.fetchone()
+#     for row in record:
+#         update.user_data['name']=record[1]
+#         update.user_data['sfera'] = record[2]
+#         update.user_data['job'] = record[3]
+#         update.user_data['motivation'] = record[4]
+#         update.user_data['username'] = record[5]
+#         update.user_data['i']=record[6]
+#     text="""{name}
+# @{username}\n
+# Сфера: {sfera}
+# Должность: {job}
+# Мотивация: {motivation}""".format(**update.user_data)
+#     keyboard_mentor_vibor = ReplyKeyboardMarkup([['Показать новую анкету'], ['Сменить сферу'],
+#                                                   ['Кандидат подходит']])
+#     bot.message.reply_text(text, reply_markup=keyboard_mentor_vibor)
+#     return "Выбор"
+
+def mentor_show_anketa(bot,update):
+    sfera1 = """{sphere}""".format(**update.user_data)
+    sfera=sfera1
+    print(sfera)
+    cursor.execute("""SELECT * 
+            FROM mentee 
+            WHERE user_sphere=?
+            ORDER BY id 
+            LIMIT 1""", (sfera,))  # WHERE user_sphere="""{Сфера}""".format(update.user_data')
+    record = cursor.fetchone()
+    for row in record:
+        update.user_data['name'] = record[1]
+        update.user_data['sfera'] = record[2]
+        update.user_data['job'] = record[3]
+        update.user_data['motivation'] = record[4]
+        update.user_data['username'] = record[5]
+        id = record[6]
+        update.user_data['id'] = id
+    text = """{name}
 @{username}\n
 Сфера: {sfera}
 Должность: {job}
 Мотивация: {motivation}""".format(**update.user_data)
+    cursor.execute("""SELECT id FROM mentee ORDER BY id DESC """)
+    row = cursor.fetchone()
+    rowitem = row[0]
+    max_id = rowitem
+    print(max_id)
+    max_id1 = max_id + 1
+    print(max_id1)
+    cursor.execute("""UPDATE mentee SET id=? WHERE id=(SELECT id FROM mentee WHERE user_sphere=?)""", (max_id1, sfera))
+    #указать параметр сферы не в 1 where а внутри второго селект?
+    #когда выполняется апдейт, он не сортирует по сфере, а просто выбирает минимальное значение из столбца, те самую первую запись и меняет id у нее.
+    #Может можно описать макс внутри SELECT?
+    conn.commit()
     keyboard_mentor_vibor = ReplyKeyboardMarkup([['Показать новую анкету'], ['Сменить сферу'],
-                                                  ['Кандидат подходит']])
+                                                 ['Кандидат подходит']])
     bot.message.reply_text(text, reply_markup=keyboard_mentor_vibor)
     return "Выбор"
 
@@ -177,6 +266,8 @@ def main():
                                                       fallbacks=[]
                                                       )
                                   )
+
+    # my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Показать новую анкету|Показать анкету'),mentor_next))
 
     my_bot.start_polling()
     my_bot.idle()
