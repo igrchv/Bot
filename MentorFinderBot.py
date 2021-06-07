@@ -103,8 +103,13 @@ def mentor_show_anketa(bot,update):
     return "Выбор"
 
 def mentor_end(bot,update):
-    bot.message.reply_text('Кто-то только что нашел себе ментора!\nВам остается только связаться с хозяином анкеты, нажав на его юзернейм.\n*анкета удаляется из бд*',
+    bot.message.reply_text('Кто-то только что нашел себе ментора!\nВам остается только связаться с хозяином анкеты, нажав на его юзернейм.\n',
                            reply_markup=ReplyKeyboardRemove())
+    username="""{username}""".format(**update.user_data)
+    motiv="""{motivation}""".format(**update.user_data)
+    job = """{job}""".format(**update.user_data)
+    description = """{job_description}""".format(**update.user_data)
+    cursor.execute("""DELETE FROM mentee WHERE user_motivation=?""",(motiv, ))
     return ConversationHandler.END
 
 def mentor_exit(bot,update):
