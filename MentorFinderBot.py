@@ -65,51 +65,58 @@ def mentor_anketa_sfera(bot, update):
 
 def mentor_show_anketa(bot,update):
     sfera1 = """{sphere}""".format(**update.user_data)
-    sfera=sfera1
-    print(sfera)
+    # sfera=sfera1
+    print(sfera1)
     cursor.execute("""SELECT * 
             FROM mentee 
             WHERE user_sphere=?
             ORDER BY id 
-            LIMIT 1""", (sfera,))  # WHERE user_sphere="""{Сфера}""".format(update.user_data')
-    record = cursor.fetchone()
-    for row in record:
-        update.user_data['name'] = record[1]
-        update.user_data['sfera'] = record[2]
-        update.user_data['job'] = record[3]
-        update.user_data['motivation'] = record[4]
-        update.user_data['username'] = record[5]
-        id = record[6]
-        update.user_data['id'] = id
-        update.user_data['job_description'] = record[7]
-    text = """<b>{name}</b>
+            LIMIT 1""", (sfera1,))# WHERE user_sphere="""{Сфера}""".format(update.user_data')
+    info = cursor.fetchone()
+    if info is None:
+        keyboard_mentor_net = ReplyKeyboardMarkup([['Сменить сферу'],['Прекратить поиск']])
+        bot.message.reply_text('Анкет в этой сфере нет, попробуйте выбрать другую',reply_markup=keyboard_mentor_net)
+    else:
+        record = info
+        for row in record:
+            update.user_data['name'] = record[1]
+            update.user_data['sfera'] = record[2]
+            update.user_data['job'] = record[3]
+            update.user_data['motivation'] = record[4]
+            update.user_data['username'] = record[5]
+            id = record[6]
+            update.user_data['id'] = id
+            update.user_data['job_description'] = record[7]
+        text = """<b>{name}</b>
 <b>@{username}\n</b>
 <b>Сфера:</b> {sfera}
 <b>Должность:</b> {job}
 <b>Описание работы:</b> {job_description}
 <b>Мотивация:</b> {motivation}""".format(**update.user_data)
-    cursor.execute("""SELECT id FROM mentee ORDER BY id DESC """)
-    row = cursor.fetchone()
-    rowitem = row[0]
-    max_id = rowitem
-    # print(max_id)
-    max_id1 = max_id + 1
-    # print(max_id1)
-    cursor.execute("""UPDATE mentee SET id=? WHERE id=(SELECT id FROM mentee WHERE user_sphere=?)""", (max_id1, sfera))
-    conn.commit()
-    keyboard_mentor_vibor = ReplyKeyboardMarkup([['Показать новую анкету'], ['Сменить сферу'],
+        cursor.execute("""SELECT id FROM mentee ORDER BY id DESC """)
+        row = cursor.fetchone()
+        rowitem = row[0]
+        max_id = rowitem
+        # print(max_id)
+        max_id1 = max_id + 1
+        # print(max_id1)
+        cursor.execute("""UPDATE mentee SET id=? WHERE id=(SELECT id FROM mentee WHERE user_sphere=?)""", (max_id1, sfera1, ))
+        conn.commit()
+        keyboard_mentor_vibor = ReplyKeyboardMarkup([['Показать новую анкету'], ['Сменить сферу'],
                                                  ['Кандидат подходит'],['Прекратить поиск']])
-    bot.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard_mentor_vibor)
+        bot.message.reply_text(text, parse_mode=ParseMode.HTML, reply_markup=keyboard_mentor_vibor)
     return "Выбор"
 
 def mentor_end(bot,update):
     bot.message.reply_text('Кто-то только что нашел себе ментора!\nВам остается только связаться с хозяином анкеты, нажав на его юзернейм.\n',
                            reply_markup=ReplyKeyboardRemove())
     username="""{username}""".format(**update.user_data)
-    motiv="""{motivation}""".format(**update.user_data)
-    job = """{job}""".format(**update.user_data)
-    description = """{job_description}""".format(**update.user_data)
-    cursor.execute("""DELETE FROM mentee WHERE user_motivation=?""",(motiv, ))
+    sfera="""{sphere}""".format(**update.user_data)
+    # motiv="""{motivation}""".format(**update.user_data)
+    # job = """{job}""".format(**update.user_data)
+    # description = """{job_description}""".format(**update.user_data)
+    cursor.execute("""DELETE FROM mentee WHERE username=? AND user_sphere=?""",(username, sfera))
+    conn.commit()
     return ConversationHandler.END
 
 def mentor_exit(bot,update):
@@ -132,14 +139,33 @@ def mentee_anketa_sfera(bot, update):
     update.user_data['Сфера'] = bot.message.text
     # check_sfera='''{Сфера}'''.format(**update.user_data)
     check_sfera=bot.message.text#"""Сфера""".format(**update.user_data)
+    username=bot.message.chat.username
     cursor.execute("""SELECT username FROM mentee WHERE user_sphere=?""",(check_sfera,))
-    # [exists] = cursor.fetchone()
-    if cursor.fetchone()==False:
+    check_username=cursor.fetchone()
+    if check_username is None:
         bot.message.reply_text('Введи свои имя и фамилию. \nНапример, вот так: Иван Иванов',
                            reply_markup=ReplyKeyboardRemove())
         return "Имя"
     else:
-        bot.message.reply_text('Ты уже оставлял анкету')
+        bot.message.reply_text('Ты уже оставлял анкету! Вот она:', reply_markup=ReplyKeyboardRemove())
+        cursor.execute("""SELECT * FROM mentee WHERE user_sphere=? AND username=?""", (check_sfera, username, ))
+        record = cursor.fetchone()
+        for row in record:
+            update.user_data['name'] = record[1]
+            update.user_data['sfera'] = record[2]
+            update.user_data['job'] = record[3]
+            update.user_data['motivation'] = record[4]
+            update.user_data['юзернейм'] = record[5]
+            update.user_data['job_description'] = record[7]
+        text = """<b>{name}</b>
+<b>@{юзернейм}\n</b>
+<b>Сфера:</b> {sfera}
+<b>Должность:</b> {job}
+<b>Описание работы:</b> {job_description}
+<b>Мотивация:</b> {motivation}""".format(**update.user_data)
+        bot.message.reply_text(text, parse_mode=ParseMode.HTML)
+        bot.message.reply_text('Если хочешь оставить анкету в другой сфере, напиши /start'
+                               '\nЕсли хочешь изменить или удалить анкету, напиши /my_profile')
         return ConversationHandler.END
 
 def mentee_anketa_name(bot, update):
@@ -179,7 +205,8 @@ def mentee_anketa_end(bot, update):
     Мотивация: {Мотивация}""".format(**update.user_data)
     print('\n',text)
     bot.message.reply_text('Готово, теперь менторы смогут увидеть твою анкету.'
-                           '\nЕсли хочешь оставить анкету в другой сфере, напиши /start', reply_markup=ReplyKeyboardRemove())
+                           '\nЕсли хочешь оставить анкету в другой сфере, напиши /start'
+                           '\nЕсли хочешь посмотреть или удалить анкету, напиши /my_profile', reply_markup=ReplyKeyboardRemove())
 
     us_id=bot.message.chat.id
     us_name="""{Имя}""".format(**update.user_data)
@@ -191,6 +218,53 @@ def mentee_anketa_end(bot, update):
 
     db_enter(user_id=us_id, user_name=us_name, user_sphere=us_sphere, user_job=us_job, user_motivation=us_motivation, username=username, job_description=us_opisanie)
     conn.commit()
+    return ConversationHandler.END
+
+#_________________________________________________________________________________________________________________________________________________________________________________________
+# Показ и удаление своей анкеты.
+
+def display_anketa(bot,update):
+    keyboard_display1 = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+                                                  ['Профессиональное развитие']])
+    bot.message.reply_text('Выберите сферу, в которой оставили анкету.', reply_markup=keyboard_display1)
+    return "Показать свою"
+
+def display_anketa2(bot,update):
+    display_sfera=bot.message.text
+    display_username=bot.message.chat.username
+    cursor.execute("""SELECT * FROM mentee WHERE user_sphere=? AND username=?""", (display_sfera, display_username,))
+    record = cursor.fetchone()
+    for row in record:
+        update.user_data['name'] = record[1]
+        update.user_data['sfera'] = record[2]
+        update.user_data['job'] = record[3]
+        update.user_data['motivation'] = record[4]
+        update.user_data['юзернейм'] = record[5]
+        update.user_data['job_description'] = record[7]
+    text = """<b>{name}</b>
+<b>@{юзернейм}\n</b>
+<b>Сфера:</b> {sfera}
+<b>Должность:</b> {job}
+<b>Описание работы:</b> {job_description}
+<b>Мотивация:</b> {motivation}""".format(**update.user_data)
+    keyboard_display2 = ReplyKeyboardMarkup([['Удалить анкету'],
+                                             ['Оставить без изменений']])
+    bot.message.reply_text(text, parse_mode=ParseMode.HTML)
+    bot.message.reply_text('Выберите, что хотите сделать со своей анкетой', reply_markup=keyboard_display2)
+    return "Показать свою 2"
+
+def display_delete(bot,update):
+    display_username=bot.message.chat.username
+    display_delete_sfera="""{sfera}""".format(**update.user_data)
+    cursor.execute("""DELETE FROM mentee WHERE username=? AND user_sphere=?""",(display_username, display_delete_sfera, ))
+    conn.commit()
+    bot.message.reply_text('Анкета удалена!\nЧтобы оставить новую, напишите /start', reply_markup=ReplyKeyboardRemove())
+    return ConversationHandler.END
+
+def display_leave(bot,update):
+    bot.message.reply_text('Поиски продолжаются!'
+                           '\nЧтобы оставить новую, напишите /start'
+                           '\nЧтобы посмотреть или удалить анкету, напиши /my_profile', reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 # user_name=us_name, user_job=us_job, useяr_motivation=us_motivation,
@@ -211,7 +285,8 @@ def main():
                                                                     MessageHandler(Filters.regex('Кандидат подходит'), mentor_end),
                                                                     MessageHandler(Filters.regex('Прекратить поиск'), mentor_exit)]
                                                       },
-                                                      fallbacks=[]
+                                                      fallbacks=[],
+                                                      allow_reentry=True
                                                       )
                                   )
 # Анкета "Найти ментора"
@@ -225,11 +300,21 @@ def main():
                                                           "Конец анкеты": [MessageHandler(Filters.regex('Все верно'), mentee_anketa_end),
                                                                            MessageHandler(Filters.regex('Пройти заново'), mentee_anketa_start)]
                                                       },
-                                                      fallbacks=[]
+                                                      fallbacks=[],
+                                                      allow_reentry=True
                                                       )
                                   )
 
-    # my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Показать новую анкету|Показать анкету'),mentor_next))
+    my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[CommandHandler('my_profile', display_anketa)],
+                                                      states={
+                                                          "Показать свою": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), display_anketa2)],
+                                                          "Показать свою 2": [MessageHandler(Filters.regex('Удалить анкету'), display_delete),
+                                                                              MessageHandler(Filters.regex('Оставить без изменений'), display_leave)]
+                                                      },
+                                                      fallbacks=[],
+                                                      allow_reentry=True
+                                                      )
+                                  )
 
     my_bot.start_polling()
     my_bot.idle()
