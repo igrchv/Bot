@@ -30,7 +30,7 @@ def sms_start(bot, update):
 def mentor_anketa_start(bot, update):
     print('\nХочешь найти ментора или стать ментором?')
     print(bot.message.text)
-    keyboard_mentor_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+    keyboard_mentor_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
                                                   ['Профессиональное развитие']])
     bot.message.reply_text('Отлично! \nТеперь выбери сферу, в которой хочешь быть ментором.',
                             reply_markup=keyboard_mentor_anketa) # задаем вопрос и выводим клавиатуру
@@ -48,7 +48,7 @@ def mentee_anketa_start(bot, update):
     print('\nХочешь найти ментора или стать ментором?')
     print(bot.message.text)
     bot.message.reply_text('Отлично! \nТеперь тебе надо заполнить анкету.')
-    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
                                            ['Профессиональное развитие']])
     bot.message.reply_text('Для начала, выбери сферу, в которой тебе нужен ментор.', reply_markup=keyboard_anketa)
     return "Сфера"
@@ -94,7 +94,7 @@ def mentee_anketa_end(bot, update):
 #def mentor_sfera(bot, update):
 #    print('\nХочешь найти ментора или стать ментором?')
 #    print(bot.message.text)
-#    keyboard_anketa_mentor = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+#    keyboard_anketa_mentor = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
 #                                           ['Профессиональное развитие']])
 #    bot.message.reply_text('Отлично! \nТеперь выбери сферу, в которой хочешь быть ментором',
 #                           reply_markup=keyboard_anketa_mentor)
@@ -106,7 +106,7 @@ def mentee_anketa_end(bot, update):
 #    print('\nХочешь найти ментора или стать ментором?')
 #    print(bot.message.text)
 #    bot.message.reply_text('Отлично! \nТеперь тебе надо заполнить анкету.')
-#    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+#    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
 #                                           ['Профессиональное развитие']])
 #    bot.message.reply_text('Для начала, выбери сферу, в которой тебе нужен ментор', reply_markup=keyboard_anketa)
 
@@ -132,7 +132,7 @@ def main():
 # Анкета "Стать ментором"
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Стать ментором'), mentor_anketa_start)],
                                                       states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentor_anketa_sfera)]
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), mentor_anketa_sfera)]
                                                       },
                                                       fallbacks=[]
                                                       )
@@ -140,7 +140,7 @@ def main():
 # Анкета "Найти ментора"
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Найти ментора'), mentee_anketa_start)],
                                                       states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
                                                           "Имя": [MessageHandler(Filters.text, mentee_anketa_name)],
                                                           "Должность": [MessageHandler(Filters.text, mentee_anketa_position)],
                                                           "Мотивация": [MessageHandler(Filters.text, mentee_anketa_motivation)],
@@ -155,7 +155,7 @@ def main():
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Стать ментором'), mentor_sfera))
 
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Карьерный рост'), anketa_name))
-#    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Личностная эффективность'), anketa_name))
+#    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Личная эффективность'), anketa_name))
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Профессиональное развитие'), anketa_name))
 
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.text, anketa_position))

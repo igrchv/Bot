@@ -49,7 +49,7 @@ def sms_start(bot, update):
 def mentor_anketa_start(bot, update):
     print('\nХочешь найти ментора или стать ментором?')
     print(bot.message.text)
-    keyboard_mentor_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+    keyboard_mentor_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
                                                   ['Профессиональное развитие']])
     bot.message.reply_text('Отлично! \nТеперь выберите сферу, в которой хотите быть ментором.',
                             reply_markup=keyboard_mentor_anketa) # задаем вопрос и выводим клавиатуру
@@ -113,14 +113,15 @@ def mentor_end(bot,update):
     bot.message.reply_text('Кто-то только что нашел себе ментора!\nВам остается только связаться с хозяином анкеты, нажав на его юзернейм.\n'
                            'Чтобы снова посмотреть анкеты, напишите /start',
                            reply_markup=ReplyKeyboardRemove())
-    username="""{username}""".format(**update.user_data)
-    sfera="""{sphere}""".format(**update.user_data)
+    return ConversationHandler.END
+    # username="""{username}""".format(**update.user_data)
+    # sfera="""{sphere}""".format(**update.user_data)
     # motiv="""{motivation}""".format(**update.user_data)
     # job = """{job}""".format(**update.user_data)
     # description = """{job_description}""".format(**update.user_data)
-    cursor.execute("""DELETE FROM mentee WHERE username=? AND user_sphere=?""",(username, sfera))
-    conn.commit()
-    return ConversationHandler.END
+    # cursor.execute("""DELETE FROM mentee WHERE username=? AND user_sphere=?""",(username, sfera))
+    # conn.commit()
+
 
 def mentor_exit(bot,update):
     bot.message.reply_text('Очень жаль, что ни один кандидат не подошел. Возможно позже появятся другие анкеты.\nЕсли захотите попробовать снова, просто напишите /start',
@@ -134,7 +135,7 @@ def mentee_anketa_start(bot, update):
     update.user_data['username'] = bot.message.chat.username
     bot.message.reply_text('Отлично! \nТеперь Вам надо заполнить анкету. '
                            'Именно ее будут видеть менторы, поэтому укажите всю, на ваш взгляд, важную информацию!')
-    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
                                            ['Профессиональное развитие']])
     bot.message.reply_text('Для начала выберите сферу, в которой Вам нужен ментор.', reply_markup=keyboard_anketa)
     return "Сфера"
@@ -209,9 +210,9 @@ def mentee_anketa_end(bot, update):
     Описание работы: {Описание работы}
     Мотивация: {Мотивация}""".format(**update.user_data)
     print('\n',text)
-    bot.message.reply_text('Готово, теперь менторы смогут увидеть Вашу анкету.'
+    bot.message.reply_text('Готово, теперь менторы смогут увидеть Вашу анкету. Не забудте удалить ее, когда с Вами свяжется ментор!'
                            '\nЕсли хотите оставить анкету в другой сфере, напишите /start'
-                           '\nЕсли хотите посмотреть или удалить анкету, напишите /my_profile', reply_markup=ReplyKeyboardRemove())
+                           '\nЕсли хотите изменить или удалить анкету, напишите /my_profile', reply_markup=ReplyKeyboardRemove())
 
     us_id=bot.message.chat.id
     us_name="""{Имя}""".format(**update.user_data)
@@ -229,7 +230,7 @@ def mentee_anketa_end(bot, update):
 # Показ и удаление своей анкеты.
 
 def display_anketa(bot,update):
-    keyboard_display1 = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+    keyboard_display1 = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
                                                   ['Профессиональное развитие']])
     bot.message.reply_text('Выберите сферу, в которой оставили анкету.', reply_markup=keyboard_display1)
     return "Показать свою"
@@ -240,7 +241,8 @@ def display_anketa2(bot,update):
     cursor.execute("""SELECT * FROM mentee WHERE user_sphere=? AND username=?""", (display_sfera, display_username,))
     display_info = cursor.fetchone()
     if display_info is None:
-        bot.message.reply_text('В этой сфере вы не оставляли анкету.', reply_markup=ReplyKeyboardRemove())
+        bot.message.reply_text('В этой сфере Вы не оставляли анкету.\nЧтобы оставить новую анкету, напишите \n/start'
+                           '\nЧтобы посмотреть свои анкеты, напишите \n/my_profile', reply_markup=ReplyKeyboardRemove())
     else:
         record = display_info
         for row in record:
@@ -279,15 +281,15 @@ def display_delete(bot,update):
     return ConversationHandler.END
 
 def display_delete_reject(bot,update):
-    bot.message.reply_text('Хорошо, менторы и дальше смогут видеть Вашу анкету.\nЧтобы оставить новую, напишите \n/start'
+    bot.message.reply_text('Хорошо, менторы и дальше смогут видеть Вашу анкету.\nЧтобы оставить анкету в другой сфере, напишите \n/start'
                            '\nЧтобы посмотреть свои анкеты в других сферах, напишите \n/my_profile',
                            reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 def display_leave(bot,update):
     bot.message.reply_text('Поиски продолжаются!'
-                           '\nЧтобы оставить новую, напишите:\n/start'
-                           '\nЧтобы посмотреть или удалить анкету, напишите:\n/my_profile', reply_markup=ReplyKeyboardRemove())
+                           '\nЧтобы оставить анкету в другой сфере, напишите:\n/start'
+                           '\nЧтобы изменить или удалить анкету, напишите:\n/my_profile', reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 def display_change(bot, update):
@@ -362,7 +364,7 @@ def display_change_end(bot, update):
     print('\n',text)
     bot.message.reply_text('Готово, теперь менторы смогут увидеть Вашу обновленную анкету.'
                            '\nЕсли хотите оставить анкету в другой сфере, напишите /start'
-                           '\nЕсли хотите посмотреть или удалить анкету, напишите /my_profile', reply_markup=ReplyKeyboardRemove())
+                           '\nЕсли хотите изменить или удалить анкету, напишите /my_profile', reply_markup=ReplyKeyboardRemove())
 
     # us_id=bot.message.chat.id
     us_name_chage="""{Имя изменение}""".format(**update.user_data)
@@ -388,7 +390,7 @@ def main():
 # Анкета "Стать ментором"
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Стать ментором'), mentor_anketa_start)],
                                                       states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentor_anketa_sfera)],
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), mentor_anketa_sfera)],
                                                           "Показ анкеты": [MessageHandler(Filters.regex('Показать анкету'), mentor_show_anketa)],
                                                           "Выбор": [MessageHandler(Filters.regex('Показать новую анкету'), mentor_show_anketa),
                                                                     MessageHandler(Filters.regex('Сменить сферу'), mentor_anketa_start),
@@ -402,7 +404,7 @@ def main():
 # Анкета "Найти ментора"
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Найти ментора'), mentee_anketa_start)],
                                                       states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
                                                           "Имя": [MessageHandler(Filters.text, mentee_anketa_name)],
                                                           "Должность": [MessageHandler(Filters.text, mentee_anketa_position)],
                                                           "Описание работы": [MessageHandler(Filters.text, mentee_anketa_job)],
@@ -417,7 +419,7 @@ def main():
 
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[CommandHandler('my_profile', display_anketa)],
                                                       states={
-                                                          "Показать свою": [MessageHandler(Filters.regex('Карьерный рост|Личностная эффективность|Профессиональное развитие'), display_anketa2)],
+                                                          "Показать свою": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), display_anketa2)],
                                                           "Показать свою 2": [MessageHandler(Filters.regex('Удалить анкету'), display_delete_confirmation),
                                                                               MessageHandler(Filters.regex('Оставить без изменений'), display_leave),
                                                                               MessageHandler(Filters.regex('Изменить анкету'), display_change)],
@@ -445,7 +447,7 @@ main()
 #def mentor_sfera(bot, update):
 #    print('\nХочешь найти ментора или стать ментором?')
 #    print(bot.message.text)
-#    keyboard_anketa_mentor = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+#    keyboard_anketa_mentor = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
 #                                           ['Профессиональное развитие']])
 #    bot.message.reply_text('Отлично! \nТеперь выбери сферу, в которой хочешь быть ментором',
 #                           reply_markup=keyboard_anketa_mentor)
@@ -457,7 +459,7 @@ main()
 #    print('\nХочешь найти ментора или стать ментором?')
 #    print(bot.message.text)
 #    bot.message.reply_text('Отлично! \nТеперь тебе надо заполнить анкету.')
-#    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личностная эффективность'],
+#    keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
 #                                           ['Профессиональное развитие']])
 #    bot.message.reply_text('Для начала, выбери сферу, в которой тебе нужен ментор', reply_markup=keyboard_anketa)
 
@@ -479,7 +481,7 @@ main()
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Стать ментором'), mentor_sfera))
 
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Карьерный рост'), anketa_name))
-#    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Личностная эффективность'), anketa_name))
+#    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Личная эффективность'), anketa_name))
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.regex('Профессиональное развитие'), anketa_name))
 
 #    my_bot.dispatcher.add_handler(MessageHandler(Filters.text, anketa_position))
