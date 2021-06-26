@@ -50,7 +50,7 @@ def mentor_anketa_start(bot, update):
     print('\nХочешь найти ментора или стать ментором?')
     print(bot.message.text)
     keyboard_mentor_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
-                                                  ['Профессиональное развитие']])
+                                                  ['Профессиональное развитие'],['Помощь новому сотруднику']])
     bot.message.reply_text('Отлично! \nТеперь выберите сферу, в которой хотите быть ментором.',
                             reply_markup=keyboard_mentor_anketa) # задаем вопрос и выводим клавиатуру
     return "Сфера" # ключ для определения следующего шага
@@ -136,7 +136,7 @@ def mentee_anketa_start(bot, update):
     bot.message.reply_text('Отлично! \nТеперь Вам надо заполнить анкету. '
                            'Именно ее будут видеть менторы, поэтому укажите всю, на ваш взгляд, важную информацию!')
     keyboard_anketa = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
-                                           ['Профессиональное развитие']])
+                                           ['Профессиональное развитие'],['Помощь новому сотруднику']])
     bot.message.reply_text('Для начала выберите сферу, в которой Вам нужен ментор.', reply_markup=keyboard_anketa)
     return "Сфера"
 
@@ -231,7 +231,7 @@ def mentee_anketa_end(bot, update):
 
 def display_anketa(bot,update):
     keyboard_display1 = ReplyKeyboardMarkup([['Карьерный рост'], ['Личная эффективность'],
-                                                  ['Профессиональное развитие']])
+                                                  ['Профессиональное развитие'],['Помощь новому сотруднику']])
     bot.message.reply_text('Выберите сферу, в которой оставили анкету.', reply_markup=keyboard_display1)
     return "Показать свою"
 
@@ -390,7 +390,7 @@ def main():
 # Анкета "Стать ментором"
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Стать ментором'), mentor_anketa_start)],
                                                       states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), mentor_anketa_sfera)],
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие|Помощь новому сотруднику'), mentor_anketa_sfera)],
                                                           "Показ анкеты": [MessageHandler(Filters.regex('Показать анкету'), mentor_show_anketa)],
                                                           "Выбор": [MessageHandler(Filters.regex('Показать новую анкету'), mentor_show_anketa),
                                                                     MessageHandler(Filters.regex('Сменить сферу'), mentor_anketa_start),
@@ -404,7 +404,7 @@ def main():
 # Анкета "Найти ментора"
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[MessageHandler(Filters.regex('Найти ментора'), mentee_anketa_start)],
                                                       states={
-                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), mentee_anketa_sfera)],
+                                                          "Сфера": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие|Помощь новому сотруднику'), mentee_anketa_sfera)],
                                                           "Имя": [MessageHandler(Filters.text, mentee_anketa_name)],
                                                           "Должность": [MessageHandler(Filters.text, mentee_anketa_position)],
                                                           "Описание работы": [MessageHandler(Filters.text, mentee_anketa_job)],
@@ -419,7 +419,7 @@ def main():
 
     my_bot.dispatcher.add_handler(ConversationHandler(entry_points=[CommandHandler('my_profile', display_anketa)],
                                                       states={
-                                                          "Показать свою": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие'), display_anketa2)],
+                                                          "Показать свою": [MessageHandler(Filters.regex('Карьерный рост|Личная эффективность|Профессиональное развитие|Помощь новому сотруднику'), display_anketa2)],
                                                           "Показать свою 2": [MessageHandler(Filters.regex('Удалить анкету'), display_delete_confirmation),
                                                                               MessageHandler(Filters.regex('Оставить без изменений'), display_leave),
                                                                               MessageHandler(Filters.regex('Изменить анкету'), display_change)],
